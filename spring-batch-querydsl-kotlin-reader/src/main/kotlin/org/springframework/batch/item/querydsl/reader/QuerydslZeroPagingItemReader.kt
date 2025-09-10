@@ -18,7 +18,7 @@ class QuerydslZeroPagingItemReader<T>(
 ) {
     init {
         name = ClassUtils.getShortName(QuerydslZeroPagingItemReader::class.java)
-        setTransacted(true)
+        transacted = true
         setPageSize(pageSize)
     }
 

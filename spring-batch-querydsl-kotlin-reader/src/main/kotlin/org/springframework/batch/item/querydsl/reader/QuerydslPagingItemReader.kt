@@ -27,9 +27,9 @@ open class QuerydslPagingItemReader<T>(
         setPageSize(pageSize)
     }
 
-    fun setTransacted(transacted: Boolean) {
-        this.transacted = transacted
-    }
+//    fun setTransacted(transacted: Boolean) {
+//        this.transacted = transacted
+//    }
 
     override fun doOpen() {
         super.doOpen()

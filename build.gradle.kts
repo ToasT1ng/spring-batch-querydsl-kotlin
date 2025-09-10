@@ -1,53 +1,37 @@
+import org.gradle.kotlin.dsl.withType
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
+    id("org.springframework.boot") version "3.5.5" apply false
+    id("io.spring.dependency-management") version "1.1.7" apply false
     kotlin("jvm") version "1.9.25"
-    kotlin("plugin.spring") version "1.9.25"
-    id("org.springframework.boot") version "3.5.5"
-    id("io.spring.dependency-management") version "1.1.7"
-    kotlin("plugin.jpa") version "1.9.25"
-    kotlin("kapt") version "1.9.25"
+    kotlin("plugin.spring") version "1.9.25" apply false
 }
 
-group = "com.toasting"
-version = "0.0.1-SNAPSHOT"
-description = "spring-batch-querydsl-kotlin"
+allprojects {
+    group = "com.toast1ng"
+    version = "1.0.0-SNAPSHOT"
 
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+    tasks.withType<JavaCompile>{
+        sourceCompatibility = "21"
+        targetCompatibility = "21"
+    }
+
+    tasks.withType<KotlinCompile> {
+        kotlinOptions {
+            freeCompilerArgs = listOf("-Xjsr305=strict")
+            jvmTarget = "21"
+        }
+    }
+
+    repositories {
+        mavenCentral()
     }
 }
 
-repositories {
-    mavenCentral()
-}
-
-dependencies {
-    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-    implementation("org.springframework.boot:spring-boot-starter-batch")
-    implementation("org.jetbrains.kotlin:kotlin-reflect")
-
-    implementation("com.querydsl:querydsl-jpa:5.0.0:jakarta")
-    kapt("com.querydsl:querydsl-apt:5.0.0:jakarta")
-    kapt("jakarta.persistence:jakarta.persistence-api")
-    kapt("jakarta.annotation:jakarta.annotation-api")
-
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-}
-
-kotlin {
-    compilerOptions {
-        freeCompilerArgs.addAll("-Xjsr305=strict")
-    }
-}
-
-allOpen {
-    annotation("jakarta.persistence.Entity")
-    annotation("jakarta.persistence.MappedSuperclass")
-    annotation("jakarta.persistence.Embeddable")
-}
-
-tasks.withType<Test> {
-    useJUnitPlatform()
+subprojects {
+    apply(plugin = "org.springframework.boot")
+    apply(plugin = "io.spring.dependency-management")
+    apply(plugin = "org.jetbrains.kotlin.plugin.spring")
+    apply(plugin = "kotlin")
 }
