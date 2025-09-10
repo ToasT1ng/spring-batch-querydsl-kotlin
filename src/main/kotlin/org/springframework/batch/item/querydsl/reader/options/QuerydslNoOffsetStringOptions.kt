@@ -1,10 +1,10 @@
-package io.toast1ng.batchquerydslkotlin.reader.options
+package org.springframework.batch.item.querydsl.reader.options
 
 import com.querydsl.core.types.OrderSpecifier
 import com.querydsl.core.types.dsl.BooleanExpression
 import com.querydsl.core.types.dsl.StringPath
 import com.querydsl.jpa.impl.JPAQuery
-import io.toast1ng.batchquerydslkotlin.reader.expression.Expression
+import org.springframework.batch.item.querydsl.reader.expression.Expression
 
 class QuerydslNoOffsetStringOptions<T>(
     private val field: StringPath,

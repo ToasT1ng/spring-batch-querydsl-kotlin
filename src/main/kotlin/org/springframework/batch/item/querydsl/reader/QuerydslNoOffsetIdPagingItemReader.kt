@@ -1,8 +1,8 @@
-package io.toast1ng.batchquerydslkotlin.reader
+package org.springframework.batch.item.querydsl.reader
 
 import com.querydsl.jpa.impl.JPAQuery
 import com.querydsl.jpa.impl.JPAQueryFactory
-import io.toast1ng.batchquerydslkotlin.reader.options.QuerydslNoOffsetNumberOptions
+import org.springframework.batch.item.querydsl.reader.options.QuerydslNoOffsetNumberOptions
 import jakarta.persistence.EntityManagerFactory
 import jakarta.persistence.EntityTransaction
 import org.springframework.util.ClassUtils

@@ -1,8 +1,8 @@
-package io.toast1ng.batchquerydslkotlin.reader.options
+package org.springframework.batch.item.querydsl.reader.options
 
 import com.querydsl.core.types.Path
 import com.querydsl.jpa.impl.JPAQuery
-import io.toast1ng.batchquerydslkotlin.reader.expression.Expression
+import org.springframework.batch.item.querydsl.reader.expression.Expression
 import org.apache.commons.logging.Log
 import org.apache.commons.logging.LogFactory
 import java.lang.reflect.Field

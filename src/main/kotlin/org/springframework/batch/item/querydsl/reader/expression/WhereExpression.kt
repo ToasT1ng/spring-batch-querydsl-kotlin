@@ -1,4 +1,4 @@
-package io.toast1ng.batchquerydslkotlin.reader.expression
+package org.springframework.batch.item.querydsl.reader.expression
 
 import com.querydsl.core.types.dsl.BooleanExpression
 import com.querydsl.core.types.dsl.NumberPath

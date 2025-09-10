@@ -1,1 +1,1 @@
-rootProject.name = "batch-query-dsl-kotlin"
+rootProject.name = "spring-batch-querydsl-kotlin"

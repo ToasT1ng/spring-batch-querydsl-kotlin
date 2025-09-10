@@ -1,4 +1,4 @@
-package io.toast1ng.batchquerydslkotlin.reader.expression
+package org.springframework.batch.item.querydsl.reader.expression
 
 enum class OrderExpression {
     ASC, DESC
