@@ -7,9 +7,9 @@ plugins {
     kotlin("kapt") version "1.9.25"
 }
 
-group = "io.toast1ng"
+group = "com.toasting"
 version = "0.0.1-SNAPSHOT"
-description = "batch-query-dsl-kotlin"
+description = "spring-batch-querydsl-kotlin"
 
 java {
     toolchain {
