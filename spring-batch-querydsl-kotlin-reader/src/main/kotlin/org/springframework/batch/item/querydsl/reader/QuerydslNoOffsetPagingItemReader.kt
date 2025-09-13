@@ -9,7 +9,7 @@ import org.springframework.util.ClassUtils
 import org.springframework.util.CollectionUtils
 
 
-class QuerydslNoOffsetPagingItemReader<T>(
+open class QuerydslNoOffsetPagingItemReader<T>(
     override val entityManagerFactory: EntityManagerFactory,
     private val pageSize: Int,
     override val queryFunction: (JPAQueryFactory) -> JPAQuery<T>,

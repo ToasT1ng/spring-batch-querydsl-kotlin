@@ -7,7 +7,7 @@ import jakarta.persistence.EntityTransaction
 import org.springframework.util.ClassUtils
 
 
-class QuerydslZeroPagingItemReader<T>(
+open class QuerydslZeroPagingItemReader<T>(
     override val entityManagerFactory: EntityManagerFactory,
     private val pageSize: Int,
     override val queryFunction: (JPAQueryFactory) -> JPAQuery<T>,
