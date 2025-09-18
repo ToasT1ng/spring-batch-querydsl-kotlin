@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: spring-batch-querydsl-kotlin-sample
+  datasource:
+    url: jdbc:h2:mem:batch-test-db
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: 1234
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+      data-locations: classpath:data.sql

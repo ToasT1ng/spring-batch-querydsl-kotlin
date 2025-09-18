@@ -7,9 +7,9 @@ import org.springframework.batch.item.querydsl.reader.QuerydslNoOffsetPagingItem
 import org.springframework.batch.item.querydsl.reader.expression.Expression
 import org.springframework.batch.item.querydsl.reader.options.QuerydslNoOffsetNumberOptions
 
-class SampleReader(
+class SampleItemReader(
     override val entityManagerFactory: EntityManagerFactory,
-    val pageSize: Int,
+    private val pageSize: Int,
 ) : QuerydslNoOffsetPagingItemReader<StudentJpaEntity>(
     entityManagerFactory = entityManagerFactory,
     pageSize = pageSize,
