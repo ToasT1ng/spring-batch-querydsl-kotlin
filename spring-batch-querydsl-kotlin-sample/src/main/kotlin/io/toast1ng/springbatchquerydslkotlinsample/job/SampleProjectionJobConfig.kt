@@ -1,5 +1,6 @@
 package io.toast1ng.springbatchquerydslkotlinsample.job
 
+import io.toast1ng.springbatchquerydslkotlinsample.db.entity.StudentAddressProjection
 import io.toast1ng.springbatchquerydslkotlinsample.db.entity.StudentJpaEntity
 import io.toast1ng.springbatchquerydslkotlinsample.db.repository.StudentJpaRepository
 import org.springframework.batch.core.Job
@@ -17,43 +18,43 @@ import org.springframework.transaction.PlatformTransactionManager
 
 
 @Configuration
-class SampleJobConfig(
+class SampleProjectionJobConfig(
     private val jobRepository: JobRepository,
     private val transactionManager: PlatformTransactionManager,
 ) {
     @Bean
-    fun sampleJob(
-        sampleStep: Step,
-        printStep1: Step,
+    fun sampleProjectionJob(
+        sampleProjectionStep: Step,
+        printStep2: Step,
     ): Job {
-        return JobBuilder("sampleJob", jobRepository)
-            .start(sampleStep)
-            .next(printStep1)
+        return JobBuilder("sampleProjectionJob", jobRepository)
+            .start(sampleProjectionStep)
+            .next(printStep2)
             .build()
     }
 
     @Bean
-    fun sampleStep(
-        sampleItemReader: QuerydslNoOffsetPagingItemReader<StudentJpaEntity>,
-        sampleItemProcessor: ItemProcessor<StudentJpaEntity, StudentJpaEntity>,
-        sampleItemWriter: ItemWriter<StudentJpaEntity>,
+    fun sampleProjectionStep(
+        sampleProjectionItemReader: QuerydslNoOffsetPagingItemReader<StudentAddressProjection>,
+        sampleProjectionItemProcessor: ItemProcessor<StudentAddressProjection, StudentJpaEntity>,
+        sampleProjectionItemWriter: ItemWriter<StudentJpaEntity>,
     ): Step {
-        return StepBuilder("sampleStep", jobRepository)
-            .chunk<StudentJpaEntity, StudentJpaEntity>(
+        return StepBuilder("sampleProjectionStep", jobRepository)
+            .chunk<StudentAddressProjection, StudentJpaEntity>(
                 CHUNK_SIZE,
                 transactionManager
             )
-            .reader(sampleItemReader)
-            .processor(sampleItemProcessor)
-            .writer(sampleItemWriter)
+            .reader(sampleProjectionItemReader)
+            .processor(sampleProjectionItemProcessor)
+            .writer(sampleProjectionItemWriter)
             .build()
     }
 
     @Bean
-    fun printStep1(
+    fun printStep2(
         studentJpaRepository: StudentJpaRepository,
     ): Step {
-        return StepBuilder("printStep1", jobRepository)
+        return StepBuilder("printStep2", jobRepository)
             .tasklet({ _, _ ->
                 val students = studentJpaRepository.findAll()
                 students.forEach {

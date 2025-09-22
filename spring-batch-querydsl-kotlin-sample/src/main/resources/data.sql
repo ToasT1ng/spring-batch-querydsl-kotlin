@@ -19,3 +19,25 @@ INSERT INTO student (seq_no, name, age, is_processed) VALUES (18, '권지호', 2
 INSERT INTO student (seq_no, name, age, is_processed) VALUES (19, '허유진', 20, false);
 INSERT INTO student (seq_no, name, age, is_processed) VALUES (20, '노지훈', 21, false);
 INSERT INTO student (seq_no, name, age, is_processed) VALUES (21, '성진우', 31, false);
+
+INSERT INTO student_address (seq_no, student_seq_no, address) VALUES (1,  2,  '서울시 마포구 홍익로 45');
+INSERT INTO student_address (seq_no, student_seq_no, address) VALUES (2,  1,  '서울시 강남구 테헤란로 123');
+INSERT INTO student_address (seq_no, student_seq_no, address) VALUES (3,  4,  '대구시 수성구 범어로 12');
+INSERT INTO student_address (seq_no, student_seq_no, address) VALUES (4,  3,  '부산시 해운대구 달맞이길 78');
+INSERT INTO student_address (seq_no, student_seq_no, address) VALUES (5,  5,  '인천시 남동구 예술로 56');
+INSERT INTO student_address (seq_no, student_seq_no, address) VALUES (6,  6,  '광주시 서구 상무대로 99');
+INSERT INTO student_address (seq_no, student_seq_no, address) VALUES (7,  7,  '대전시 유성구 대학로 77');
+INSERT INTO student_address (seq_no, student_seq_no, address) VALUES (8,  8,  '서울시 송파구 올림픽로 321');
+INSERT INTO student_address (seq_no, student_seq_no, address) VALUES (9,  9,  '경기도 성남시 분당구 불정로 88');
+INSERT INTO student_address (seq_no, student_seq_no, address) VALUES (10, 10, '경기도 용인시 기흥구 강남로 65');
+INSERT INTO student_address (seq_no, student_seq_no, address) VALUES (11, 11, '경기도 수원시 영통구 대학로 17');
+INSERT INTO student_address (seq_no, student_seq_no, address) VALUES (12, 12, '충청북도 청주시 상당구 중앙로 51');
+INSERT INTO student_address (seq_no, student_seq_no, address) VALUES (13, 13, '강원도 춘천시 중앙로 101');
+INSERT INTO student_address (seq_no, student_seq_no, address) VALUES (14, 14, '경상북도 포항시 북구 삼호로 212');
+INSERT INTO student_address (seq_no, student_seq_no, address) VALUES (15, 15, '전라북도 전주시 완산구 백제대로 88');
+INSERT INTO student_address (seq_no, student_seq_no, address) VALUES (16, 16, '제주특별자치도 제주시 중앙로 45');
+INSERT INTO student_address (seq_no, student_seq_no, address) VALUES (17, 17, '서울시 은평구 불광로 77');
+INSERT INTO student_address (seq_no, student_seq_no, address) VALUES (18, 18, '서울시 종로구 세종대로 123');
+INSERT INTO student_address (seq_no, student_seq_no, address) VALUES (19, 19, '경기도 고양시 일산동구 중앙로 345');
+INSERT INTO student_address (seq_no, student_seq_no, address) VALUES (20, 20, '울산시 남구 삼산로 23');
+INSERT INTO student_address (seq_no, student_seq_no, address) VALUES (21, 21, '서울시 동작구 흑석로 66');
