@@ -3,11 +3,12 @@ package org.springframework.batch.item.querydsl.reader.options
 import com.querydsl.core.types.dsl.NumberPath
 import org.springframework.batch.item.querydsl.reader.expression.Expression
 
-class QuerydslNoOffsetNumberOptions<T, N>(
+class QuerydslProjectionNoOffsetNumberOptions<T, N>(
     private val field: NumberPath<N>,
-    expression: Expression
+    expression: Expression,
+    fieldName: String,
 ) : BaseNoOffsetNumberOptions<T, N>(
     field = field,
     expression = expression,
-    fieldName = field.toString().substringAfterLast(".")
+    fieldName = fieldName
 ) where N : Number, N : Comparable<*>

@@ -2,7 +2,7 @@ package org.springframework.batch.item.querydsl.reader
 
 import com.querydsl.jpa.impl.JPAQuery
 import com.querydsl.jpa.impl.JPAQueryFactory
-import org.springframework.batch.item.querydsl.reader.options.QuerydslNoOffsetNumberOptions
+import org.springframework.batch.item.querydsl.reader.options.BaseNoOffsetNumberOptions
 import jakarta.persistence.EntityManagerFactory
 import jakarta.persistence.EntityTransaction
 import org.springframework.util.ClassUtils
@@ -14,7 +14,7 @@ open class QuerydslNoOffsetIdPagingItemReader<T, N>(
     private val pageSize: Int,
     override val queryFunction: (JPAQueryFactory) -> JPAQuery<T>,
     override var transacted: Boolean = true,
-    private val options: QuerydslNoOffsetNumberOptions<T, N>
+    private val options: BaseNoOffsetNumberOptions<T, N>
 ) : QuerydslPagingItemReader<T>(
     entityManagerFactory = entityManagerFactory,
     pageSize = pageSize,

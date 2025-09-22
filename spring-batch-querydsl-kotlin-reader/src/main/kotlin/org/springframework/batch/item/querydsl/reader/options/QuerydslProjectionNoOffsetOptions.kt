@@ -1,12 +1,11 @@
 package org.springframework.batch.item.querydsl.reader.options
 
-import jakarta.persistence.criteria.Path
 import org.springframework.batch.item.querydsl.reader.expression.Expression
 
-abstract class QuerydslNoOffsetOptions<T>(
-    field: Path<*>,
+abstract class QuerydslProjectionNoOffsetOptions<T>(
+    inputFieldName: String,
     expression: Expression
 ) : BaseNoOffsetOptions<T>(
     expression = expression,
-    fieldName = field.toString().substringAfterLast(".")
+    fieldName = inputFieldName
 )
