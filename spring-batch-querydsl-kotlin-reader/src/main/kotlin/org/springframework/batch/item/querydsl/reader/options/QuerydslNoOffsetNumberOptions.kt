@@ -8,6 +8,6 @@ class QuerydslNoOffsetNumberOptions<T, N>(
     expression: Expression
 ) : BaseNoOffsetNumberOptions<T, N>(
     field = field,
+    fieldName = field.toString().substringAfterLast("."),
     expression = expression,
-    fieldName = field.toString().substringAfterLast(".")
 ) where N : Number, N : Comparable<*>

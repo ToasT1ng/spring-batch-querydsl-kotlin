@@ -5,10 +5,10 @@ import org.springframework.batch.item.querydsl.reader.expression.Expression
 
 class QuerydslProjectionNoOffsetStringOptions<T>(
     private val field: StringPath,
+    fieldName: String,
     expression: Expression,
-    inputFieldName: String,
 ) : BaseNoOffsetStringOptions<T>(
     field = field,
+    fieldName = fieldName,
     expression = expression,
-    fieldName = inputFieldName
 )

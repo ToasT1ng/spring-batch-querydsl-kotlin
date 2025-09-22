@@ -8,6 +8,6 @@ class QuerydslNoOffsetStringOptions<T>(
     expression: Expression
 ) : BaseNoOffsetStringOptions<T>(
     field = field,
+    fieldName = field.toString().substringAfterLast("."),
     expression = expression,
-    fieldName = field.toString().substringAfterLast(".")
 )

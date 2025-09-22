@@ -7,6 +7,6 @@ abstract class QuerydslNoOffsetOptions<T>(
     field: Path<*>,
     expression: Expression
 ) : BaseNoOffsetOptions<T>(
+    fieldName = field.toString().substringAfterLast("."),
     expression = expression,
-    fieldName = field.toString().substringAfterLast(".")
 )
