@@ -10,6 +10,12 @@ on:
       - main
       - develop
 
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+  statuses: write
+
 jobs:
   test:
     name: Run Tests
@@ -64,14 +70,31 @@ jobs:
             ${{ matrix.module }}/build/reports/jacoco/test/
           retention-days: 30
 
-      - name: Comment test results on PR
-        if: github.event_name == 'pull_request' && always()
-        uses: EnricoMi/publish-unit-test-result-action@v2
-        with:
-          files: |
-            ${{ matrix.module }}/build/test-results/test/*.xml
-          check_name: Test Results (${{ matrix.module }})
-          comment_title: Test Results for ${{ matrix.module }}
+      - name: Publish test results summary
+        if: always()
+        run: |
+          echo "## Test Results: ${{ matrix.module }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ -d "${{ matrix.module }}/build/test-results/test" ]; then
+            TOTAL=$(find ${{ matrix.module }}/build/test-results/test -name "*.xml" -exec grep -h "testsuite" {} \; | grep -oP 'tests="\K[0-9]+' | awk '{sum += $1} END {print sum}')
+            FAILURES=$(find ${{ matrix.module }}/build/test-results/test -name "*.xml" -exec grep -h "testsuite" {} \; | grep -oP 'failures="\K[0-9]+' | awk '{sum += $1} END {print sum}')
+            ERRORS=$(find ${{ matrix.module }}/build/test-results/test -name "*.xml" -exec grep -h "testsuite" {} \; | grep -oP 'errors="\K[0-9]+' | awk '{sum += $1} END {print sum}')
+
+            echo "- **Total Tests**: $TOTAL" >> $GITHUB_STEP_SUMMARY
+            echo "- **Failures**: $FAILURES" >> $GITHUB_STEP_SUMMARY
+            echo "- **Errors**: $ERRORS" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+
+            if [ "$FAILURES" -gt 0 ] || [ "$ERRORS" -gt 0 ]; then
+              echo "❌ Tests failed!" >> $GITHUB_STEP_SUMMARY
+              exit 1
+            else
+              echo "✅ All tests passed!" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "⚠️ No test results found" >> $GITHUB_STEP_SUMMARY
+          fi
 
   coverage:
     name: Coverage Report
