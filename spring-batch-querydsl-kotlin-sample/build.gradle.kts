@@ -10,6 +10,7 @@ plugins {
     id("org.jetbrains.kotlin.kapt") version "1.9.25"
     kotlin("plugin.allopen") version "1.9.25"
     kotlin("plugin.noarg") version "1.9.25"
+    jacoco
 }
 
 dependencies {
@@ -57,4 +58,33 @@ tasks.withType<KotlinCompile> {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+}
+
+jacoco {
+    toolVersion = "0.8.11"
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+        csv.required.set(false)
+    }
+
+    classDirectories.setFrom(
+        files(classDirectories.files.map {
+            fileTree(it) {
+                exclude(
+                    "**/Q*.class", // QueryDSL generated classes
+                    "**/.*", // Hidden files
+                )
+            }
+        })
+    )
+}
+
+tasks.test {
+    finalizedBy(tasks.jacocoTestReport)
 }

@@ -1,0 +1,214 @@
+name: PR Test and Coverage
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+  push:
+    branches:
+      - main
+      - develop
+
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+  statuses: write
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        module:
+          - spring-batch-querydsl-kotlin-reader
+          - spring-batch-querydsl-kotlin-sample
+      fail-fast: false
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Run tests for ${{ matrix.module }}
+        run: ./gradlew :${{ matrix.module }}:test --parallel --build-cache --continue
+
+      - name: Generate JaCoCo coverage report
+        if: always()
+        run: ./gradlew :${{ matrix.module }}:jacocoTestReport
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.module }}
+          path: |
+            ${{ matrix.module }}/build/reports/tests/test/
+            ${{ matrix.module }}/build/test-results/test/
+          retention-days: 30
+
+      - name: Upload coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-reports-${{ matrix.module }}
+          path: |
+            ${{ matrix.module }}/build/reports/jacoco/test/
+          retention-days: 30
+
+      - name: Publish test results summary
+        if: always()
+        run: |
+          echo "## Test Results: ${{ matrix.module }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ -d "${{ matrix.module }}/build/test-results/test" ]; then
+            TOTAL=$(find ${{ matrix.module }}/build/test-results/test -name "*.xml" -exec grep -h "testsuite" {} \; | grep -oP 'tests="\K[0-9]+' | awk '{sum += $1} END {print sum}')
+            FAILURES=$(find ${{ matrix.module }}/build/test-results/test -name "*.xml" -exec grep -h "testsuite" {} \; | grep -oP 'failures="\K[0-9]+' | awk '{sum += $1} END {print sum}')
+            ERRORS=$(find ${{ matrix.module }}/build/test-results/test -name "*.xml" -exec grep -h "testsuite" {} \; | grep -oP 'errors="\K[0-9]+' | awk '{sum += $1} END {print sum}')
+
+            echo "- **Total Tests**: $TOTAL" >> $GITHUB_STEP_SUMMARY
+            echo "- **Failures**: $FAILURES" >> $GITHUB_STEP_SUMMARY
+            echo "- **Errors**: $ERRORS" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+
+            if [ "$FAILURES" -gt 0 ] || [ "$ERRORS" -gt 0 ]; then
+              echo "❌ Tests failed!" >> $GITHUB_STEP_SUMMARY
+              exit 1
+            else
+              echo "✅ All tests passed!" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "⚠️ No test results found" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  coverage:
+    name: Coverage Report
+    needs: test
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Generate coverage reports
+        run: |
+          ./gradlew test jacocoTestReport --parallel --build-cache
+
+      - name: Download all coverage reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: coverage-reports-*
+          path: coverage-reports
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: |
+            spring-batch-querydsl-kotlin-reader/build/reports/jacoco/test/jacocoTestReport.xml
+            spring-batch-querydsl-kotlin-sample/build/reports/jacoco/test/jacocoTestReport.xml
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+
+      - name: Generate coverage summary
+        run: |
+          echo "## Test Coverage Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ -f spring-batch-querydsl-kotlin-reader/build/reports/jacoco/test/html/index.html ]; then
+            echo "### Reader Module" >> $GITHUB_STEP_SUMMARY
+            echo "Coverage report generated successfully" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ -f spring-batch-querydsl-kotlin-sample/build/reports/jacoco/test/html/index.html ]; then
+            echo "### Sample Module" >> $GITHUB_STEP_SUMMARY
+            echo "Coverage report generated successfully" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  build:
+    name: Build Project
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build with Gradle
+        run: ./gradlew build -x test --parallel --build-cache
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: |
+            spring-batch-querydsl-kotlin-reader/build/libs/
+            spring-batch-querydsl-kotlin-sample/build/libs/
+          retention-days: 7
+
+  status-check:
+    name: Status Check
+    needs: [test, coverage, build]
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - name: Check test results
+        run: |
+          if [ "${{ needs.test.result }}" != "success" ]; then
+            echo "Tests failed!"
+            exit 1
+          fi
+          echo "All tests passed!"
+
+      - name: Check build results
+        run: |
+          if [ "${{ needs.build.result }}" != "success" ]; then
+            echo "Build failed!"
+            exit 1
+          fi
+          echo "Build succeeded!"
+
+      - name: Report status
+        run: |
+          echo "## CI Status" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- Tests: ${{ needs.test.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Coverage: ${{ needs.coverage.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Build: ${{ needs.build.result }}" >> $GITHUB_STEP_SUMMARY
