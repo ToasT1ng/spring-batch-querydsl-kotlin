@@ -14,6 +14,7 @@ plugins {
     kotlin("jvm") version "1.9.25"
     kotlin("plugin.spring") version "1.9.25"
     kotlin("plugin.jpa") version "1.9.25"
+    jacoco
 }
 
 dependencies {
@@ -39,4 +40,55 @@ tasks.withType<KotlinCompile> {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+}
+
+jacoco {
+    toolVersion = "0.8.11"
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+        csv.required.set(false)
+    }
+
+    classDirectories.setFrom(
+        files(classDirectories.files.map {
+            fileTree(it) {
+                exclude(
+                    "**/Q*.class", // QueryDSL generated classes
+                    "**/.*", // Hidden files
+                )
+            }
+        })
+    )
+}
+
+tasks.jacocoTestCoverageVerification {
+    dependsOn(tasks.jacocoTestReport)
+
+    violationRules {
+        rule {
+            limit {
+                minimum = "0.70".toBigDecimal()
+            }
+        }
+
+        rule {
+            element = "CLASS"
+            limit {
+                minimum = "0.60".toBigDecimal()
+            }
+            excludes = listOf(
+                "*.Q*", // QueryDSL generated classes
+            )
+        }
+    }
+}
+
+tasks.test {
+    finalizedBy(tasks.jacocoTestReport)
 }
