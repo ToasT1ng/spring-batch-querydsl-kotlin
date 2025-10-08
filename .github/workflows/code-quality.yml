@@ -50,8 +50,11 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Check dependencies
-        run: ./gradlew dependencies --configuration runtimeClasspath
+      - name: Check dependencies for reader module
+        run: ./gradlew :spring-batch-querydsl-kotlin-reader:dependencies --configuration runtimeClasspath
+
+      - name: Check dependencies for sample module
+        run: ./gradlew :spring-batch-querydsl-kotlin-sample:dependencies --configuration runtimeClasspath
 
   build-verification:
     name: Build Verification
