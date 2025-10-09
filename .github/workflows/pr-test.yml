@@ -151,6 +151,143 @@ jobs:
             echo "Coverage report generated successfully" >> $GITHUB_STEP_SUMMARY
           fi
 
+      - name: Parse coverage data
+        id: coverage
+        run: |
+          # Parse reader module coverage
+          if [ -f spring-batch-querydsl-kotlin-reader/build/reports/jacoco/test/jacocoTestReport.xml ]; then
+            READER_INSTR=$(grep -oP '<counter type="INSTRUCTION" missed="\K[0-9]+' spring-batch-querydsl-kotlin-reader/build/reports/jacoco/test/jacocoTestReport.xml | head -1)
+            READER_INSTR_COVERED=$(grep -oP '<counter type="INSTRUCTION" missed="[0-9]+" covered="\K[0-9]+' spring-batch-querydsl-kotlin-reader/build/reports/jacoco/test/jacocoTestReport.xml | head -1)
+            READER_BRANCH=$(grep -oP '<counter type="BRANCH" missed="\K[0-9]+' spring-batch-querydsl-kotlin-reader/build/reports/jacoco/test/jacocoTestReport.xml | head -1)
+            READER_BRANCH_COVERED=$(grep -oP '<counter type="BRANCH" missed="[0-9]+" covered="\K[0-9]+' spring-batch-querydsl-kotlin-reader/build/reports/jacoco/test/jacocoTestReport.xml | head -1)
+
+            READER_INSTR_TOTAL=$((READER_INSTR + READER_INSTR_COVERED))
+            READER_BRANCH_TOTAL=$((READER_BRANCH + READER_BRANCH_COVERED))
+
+            if [ $READER_INSTR_TOTAL -gt 0 ]; then
+              READER_INSTR_PCT=$(awk "BEGIN {printf \"%.2f\", ($READER_INSTR_COVERED/$READER_INSTR_TOTAL)*100}")
+            else
+              READER_INSTR_PCT="0.00"
+            fi
+
+            if [ $READER_BRANCH_TOTAL -gt 0 ]; then
+              READER_BRANCH_PCT=$(awk "BEGIN {printf \"%.2f\", ($READER_BRANCH_COVERED/$READER_BRANCH_TOTAL)*100}")
+            else
+              READER_BRANCH_PCT="0.00"
+            fi
+
+            echo "reader_instr_pct=$READER_INSTR_PCT" >> $GITHUB_OUTPUT
+            echo "reader_branch_pct=$READER_BRANCH_PCT" >> $GITHUB_OUTPUT
+            echo "reader_instr_covered=$READER_INSTR_COVERED" >> $GITHUB_OUTPUT
+            echo "reader_instr_total=$READER_INSTR_TOTAL" >> $GITHUB_OUTPUT
+            echo "reader_branch_covered=$READER_BRANCH_COVERED" >> $GITHUB_OUTPUT
+            echo "reader_branch_total=$READER_BRANCH_TOTAL" >> $GITHUB_OUTPUT
+          fi
+
+          # Parse sample module coverage
+          if [ -f spring-batch-querydsl-kotlin-sample/build/reports/jacoco/test/jacocoTestReport.xml ]; then
+            SAMPLE_INSTR=$(grep -oP '<counter type="INSTRUCTION" missed="\K[0-9]+' spring-batch-querydsl-kotlin-sample/build/reports/jacoco/test/jacocoTestReport.xml | head -1)
+            SAMPLE_INSTR_COVERED=$(grep -oP '<counter type="INSTRUCTION" missed="[0-9]+" covered="\K[0-9]+' spring-batch-querydsl-kotlin-sample/build/reports/jacoco/test/jacocoTestReport.xml | head -1)
+            SAMPLE_BRANCH=$(grep -oP '<counter type="BRANCH" missed="\K[0-9]+' spring-batch-querydsl-kotlin-sample/build/reports/jacoco/test/jacocoTestReport.xml | head -1)
+            SAMPLE_BRANCH_COVERED=$(grep -oP '<counter type="BRANCH" missed="[0-9]+" covered="\K[0-9]+' spring-batch-querydsl-kotlin-sample/build/reports/jacoco/test/jacocoTestReport.xml | head -1)
+
+            SAMPLE_INSTR_TOTAL=$((SAMPLE_INSTR + SAMPLE_INSTR_COVERED))
+            SAMPLE_BRANCH_TOTAL=$((SAMPLE_BRANCH + SAMPLE_BRANCH_COVERED))
+
+            if [ $SAMPLE_INSTR_TOTAL -gt 0 ]; then
+              SAMPLE_INSTR_PCT=$(awk "BEGIN {printf \"%.2f\", ($SAMPLE_INSTR_COVERED/$SAMPLE_INSTR_TOTAL)*100}")
+            else
+              SAMPLE_INSTR_PCT="0.00"
+            fi
+
+            if [ $SAMPLE_BRANCH_TOTAL -gt 0 ]; then
+              SAMPLE_BRANCH_PCT=$(awk "BEGIN {printf \"%.2f\", ($SAMPLE_BRANCH_COVERED/$SAMPLE_BRANCH_TOTAL)*100}")
+            else
+              SAMPLE_BRANCH_PCT="0.00"
+            fi
+
+            echo "sample_instr_pct=$SAMPLE_INSTR_PCT" >> $GITHUB_OUTPUT
+            echo "sample_branch_pct=$SAMPLE_BRANCH_PCT" >> $GITHUB_OUTPUT
+            echo "sample_instr_covered=$SAMPLE_INSTR_COVERED" >> $GITHUB_OUTPUT
+            echo "sample_instr_total=$SAMPLE_INSTR_TOTAL" >> $GITHUB_OUTPUT
+            echo "sample_branch_covered=$SAMPLE_BRANCH_COVERED" >> $GITHUB_OUTPUT
+            echo "sample_branch_total=$SAMPLE_BRANCH_TOTAL" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Comment PR with coverage
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const readerInstrPct = '${{ steps.coverage.outputs.reader_instr_pct }}';
+            const readerBranchPct = '${{ steps.coverage.outputs.reader_branch_pct }}';
+            const readerInstrCovered = '${{ steps.coverage.outputs.reader_instr_covered }}';
+            const readerInstrTotal = '${{ steps.coverage.outputs.reader_instr_total }}';
+            const readerBranchCovered = '${{ steps.coverage.outputs.reader_branch_covered }}';
+            const readerBranchTotal = '${{ steps.coverage.outputs.reader_branch_total }}';
+
+            const sampleInstrPct = '${{ steps.coverage.outputs.sample_instr_pct }}';
+            const sampleBranchPct = '${{ steps.coverage.outputs.sample_branch_pct }}';
+            const sampleInstrCovered = '${{ steps.coverage.outputs.sample_instr_covered }}';
+            const sampleInstrTotal = '${{ steps.coverage.outputs.sample_instr_total }}';
+            const sampleBranchCovered = '${{ steps.coverage.outputs.sample_branch_covered }}';
+            const sampleBranchTotal = '${{ steps.coverage.outputs.sample_branch_total }}';
+
+            const getStatusEmoji = (pct) => {
+              const num = parseFloat(pct);
+              if (num >= 90) return '🟢';
+              if (num >= 70) return '🟡';
+              return '🔴';
+            };
+
+            const body = `## 📊 Test Coverage Report
+
+            ### Reader Module
+            | Type | Coverage | Details |
+            |------|----------|---------|
+            | ${getStatusEmoji(readerInstrPct)} **Instruction** | **${readerInstrPct}%** | ${readerInstrCovered}/${readerInstrTotal} |
+            | ${getStatusEmoji(readerBranchPct)} **Branch** | **${readerBranchPct}%** | ${readerBranchCovered}/${readerBranchTotal} |
+
+            ### Sample Module
+            | Type | Coverage | Details |
+            |------|----------|---------|
+            | ${getStatusEmoji(sampleInstrPct)} **Instruction** | **${sampleInstrPct}%** | ${sampleInstrCovered}/${sampleInstrTotal} |
+            | ${getStatusEmoji(sampleBranchPct)} **Branch** | **${sampleBranchPct}%** | ${sampleBranchCovered}/${sampleBranchTotal} |
+
+            ---
+            Coverage legend: 🟢 ≥90% | 🟡 70-89% | 🔴 <70%
+
+            <sub>Generated by [JaCoCo](https://www.jacoco.org/jacoco/)</sub>`;
+
+            // Find existing comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const botComment = comments.find(comment =>
+              comment.user.type === 'Bot' && comment.body.includes('📊 Test Coverage Report')
+            );
+
+            if (botComment) {
+              // Update existing comment
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: body
+              });
+            } else {
+              // Create new comment
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: body
+              });
+            }
+
   build:
     name: Build Project
     needs: test
