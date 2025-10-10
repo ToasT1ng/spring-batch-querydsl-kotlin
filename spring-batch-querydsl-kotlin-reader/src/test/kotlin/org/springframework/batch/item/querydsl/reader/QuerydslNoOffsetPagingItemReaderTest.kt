@@ -13,25 +13,13 @@ import org.springframework.batch.item.querydsl.reader.options.BaseNoOffsetNumber
 
 class QuerydslNoOffsetPagingItemReaderTest : FunSpec({
 
-    lateinit var entityManagerFactory: EntityManagerFactory
-    lateinit var entityManager: EntityManager
-    lateinit var transaction: EntityTransaction
+    lateinit var mockHelper: QuerydslTestMockHelper
     lateinit var options: BaseNoOffsetNumberOptions<TestEntity, Long>
 
     beforeTest {
-        entityManagerFactory = mockk()
-        entityManager = mockk(relaxed = true)
-        transaction = mockk(relaxed = true)
+        mockHelper = QuerydslTestMockHelper()
+        mockHelper.setupEntityManager()
 
-        every { entityManagerFactory.createEntityManager(any<Map<String, Any>>()) } returns entityManager
-        every { entityManager.transaction } returns transaction
-        every { entityManager.close() } just Runs
-        every { transaction.begin() } just Runs
-        every { transaction.commit() } just Runs
-        every { entityManager.flush() } just Runs
-        every { entityManager.clear() } just Runs
-
-        val numberPath = mockk<NumberPath<Long>>()
         options = mockk(relaxed = true)
         every { options.initKeys(any(), any()) } just Runs
         every { options.createQuery(any(), any()) } answers { firstArg() }
@@ -39,7 +27,7 @@ class QuerydslNoOffsetPagingItemReaderTest : FunSpec({
     }
 
     afterTest {
-        clearAllMocks()
+        mockHelper.clearMocks()
     }
 
     test("QuerydslNoOffsetPagingItemReader should initialize options on first page") {
@@ -50,7 +38,7 @@ class QuerydslNoOffsetPagingItemReaderTest : FunSpec({
         every { jpaQuery.fetch() } returns testData
 
         val reader = QuerydslNoOffsetPagingItemReader(
-            entityManagerFactory = entityManagerFactory,
+            entityManagerFactory = mockHelper.entityManagerFactory,
             pageSize = 10,
             queryFunction = { jpaQuery },
             transacted = true,
@@ -71,7 +59,7 @@ class QuerydslNoOffsetPagingItemReaderTest : FunSpec({
         every { jpaQuery.fetch() } returns testData
 
         val reader = QuerydslNoOffsetPagingItemReader(
-            entityManagerFactory = entityManagerFactory,
+            entityManagerFactory = mockHelper.entityManagerFactory,
             pageSize = 10,
             queryFunction = { jpaQuery },
             transacted = true,
@@ -95,7 +83,7 @@ class QuerydslNoOffsetPagingItemReaderTest : FunSpec({
         every { jpaQuery.fetch() } returns testData
 
         val reader = QuerydslNoOffsetPagingItemReader(
-            entityManagerFactory = entityManagerFactory,
+            entityManagerFactory = mockHelper.entityManagerFactory,
             pageSize = 10,
             queryFunction = { jpaQuery },
             transacted = true,
@@ -114,7 +102,7 @@ class QuerydslNoOffsetPagingItemReaderTest : FunSpec({
         every { jpaQuery.fetch() } returns emptyList()
 
         val reader = QuerydslNoOffsetPagingItemReader(
-            entityManagerFactory = entityManagerFactory,
+            entityManagerFactory = mockHelper.entityManagerFactory,
             pageSize = 10,
             queryFunction = { jpaQuery },
             transacted = true,
@@ -135,7 +123,7 @@ class QuerydslNoOffsetPagingItemReaderTest : FunSpec({
         every { jpaQuery.fetch() } returns testData
 
         val reader = QuerydslNoOffsetPagingItemReader(
-            entityManagerFactory = entityManagerFactory,
+            entityManagerFactory = mockHelper.entityManagerFactory,
             pageSize = 5,
             queryFunction = { jpaQuery },
             transacted = true,
@@ -156,7 +144,7 @@ class QuerydslNoOffsetPagingItemReaderTest : FunSpec({
         every { jpaQuery.fetch() } returns testData
 
         val reader = QuerydslNoOffsetPagingItemReader(
-            entityManagerFactory = entityManagerFactory,
+            entityManagerFactory = mockHelper.entityManagerFactory,
             pageSize = 10,
             queryFunction = { jpaQuery },
             transacted = true,
@@ -166,8 +154,8 @@ class QuerydslNoOffsetPagingItemReaderTest : FunSpec({
         reader.open(mockk(relaxed = true))
         reader.read()
 
-        verify { transaction.begin() }
-        verify { transaction.commit() }
+        verify { mockHelper.transaction.begin() }
+        verify { mockHelper.transaction.commit() }
     }
 
     test("QuerydslNoOffsetPagingItemReader should read multiple pages correctly") {
@@ -184,7 +172,7 @@ class QuerydslNoOffsetPagingItemReaderTest : FunSpec({
         every { jpaQuery.fetch() } returnsMany listOf(firstPageData, secondPageData)
 
         val reader = QuerydslNoOffsetPagingItemReader(
-            entityManagerFactory = entityManagerFactory,
+            entityManagerFactory = mockHelper.entityManagerFactory,
             pageSize = 2,
             queryFunction = { jpaQuery },
             transacted = true,
