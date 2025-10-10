@@ -6,24 +6,27 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.mockk.*
+import org.springframework.batch.item.querydsl.reader.QuerydslTestMockHelper
 import org.springframework.batch.item.querydsl.reader.TestEntity
 import org.springframework.batch.item.querydsl.reader.expression.Expression
 
 class BaseNoOffsetNumberOptionsTest : FunSpec({
 
-    test("initKeys should initialize currentId and lastId on first page") {
-        val numberPath = mockk<NumberPath<Long>>()
-        val query = mockk<JPAQuery<TestEntity>>()
-        val clonedQuery = mockk<JPAQuery<TestEntity>>(relaxed = true)
-        val selectQuery = mockk<JPAQuery<Long>>(relaxed = true)
+    lateinit var mockHelper: QuerydslTestMockHelper
 
-        every { query.clone() } returns clonedQuery
-        every { clonedQuery.select(numberPath.min()) } returns selectQuery
-        every { clonedQuery.select(numberPath.max()) } returns selectQuery
-        every { clonedQuery.select(numberPath) } returns selectQuery
-        every { selectQuery.orderBy(any()) } returns selectQuery
-        every { selectQuery.fetchFirst() } returns 1L andThen 100L
-        every { clonedQuery.toString() } returns "SELECT * FROM test"
+    beforeTest {
+        mockHelper = QuerydslTestMockHelper()
+    }
+
+    afterTest {
+        mockHelper.clearMocks()
+    }
+
+    test("initKeys should initialize currentId and lastId on first page") {
+        val numberPath = mockHelper.createNumberPath<Long>()
+        val query = mockk<JPAQuery<TestEntity>>()
+        val clonedQuery = mockHelper.setupQueryWithAggregates(query, 1L, 100L)
+        mockHelper.setupNumberAggregates(clonedQuery, numberPath, 1L, 100L)
 
         val options = object : BaseNoOffsetNumberOptions<TestEntity, Long>(
             numberPath, "id", Expression.ASC
@@ -36,7 +39,7 @@ class BaseNoOffsetNumberOptionsTest : FunSpec({
     }
 
     test("initKeys should not initialize on subsequent pages") {
-        val numberPath = mockk<NumberPath<Long>>()
+        val numberPath = mockHelper.createNumberPath<Long>()
         val query = mockk<JPAQuery<TestEntity>>()
 
         val options = object : BaseNoOffsetNumberOptions<TestEntity, Long>(
@@ -50,23 +53,11 @@ class BaseNoOffsetNumberOptionsTest : FunSpec({
     }
 
     test("createQuery should add where and order by clauses when currentId is set") {
-        val numberPath = mockk<NumberPath<Long>>()
+        val numberPath = mockHelper.createNumberPath<Long>()
         val query = mockk<JPAQuery<TestEntity>>(relaxed = true)
-        val clonedQuery = mockk<JPAQuery<TestEntity>>(relaxed = true)
-        val selectQuery = mockk<JPAQuery<Long>>(relaxed = true)
-
-        every { query.clone() } returns clonedQuery
-        every { clonedQuery.select(numberPath.min()) } returns selectQuery
-        every { clonedQuery.select(numberPath.max()) } returns selectQuery
-        every { clonedQuery.select(numberPath) } returns selectQuery
-        every { selectQuery.fetchFirst() } returns 1L andThen 100L
-        every { clonedQuery.toString() } returns "SELECT * FROM test"
-
-        every { query.where(any()) } returns query
-        every { query.orderBy(any()) } returns query
-        every { numberPath.goe(any<Long>()) } returns mockk(relaxed = true)
-        every { numberPath.loe(any<Long>()) } returns mockk(relaxed = true)
-        every { numberPath.asc() } returns mockk()
+        val clonedQuery = mockHelper.setupQueryWithAggregates(query, 1L, 100L)
+        mockHelper.setupNumberAggregates(clonedQuery, numberPath, 1L, 100L)
+        mockHelper.setupQueryWithWhereAndOrder(query)
 
         val options = object : BaseNoOffsetNumberOptions<TestEntity, Long>(
             numberPath, "id", Expression.ASC
@@ -81,7 +72,7 @@ class BaseNoOffsetNumberOptionsTest : FunSpec({
     }
 
     test("createQuery should return query unchanged when currentId is null") {
-        val numberPath = mockk<NumberPath<Long>>()
+        val numberPath = mockHelper.createNumberPath<Long>()
         val query = mockk<JPAQuery<TestEntity>>()
 
         val options = object : BaseNoOffsetNumberOptions<TestEntity, Long>(
@@ -95,7 +86,7 @@ class BaseNoOffsetNumberOptionsTest : FunSpec({
     }
 
     test("resetCurrentId should update currentId from entity field") {
-        val numberPath = mockk<NumberPath<Long>>()
+        val numberPath = mockHelper.createNumberPath<Long>()
         val entity = TestEntity(id = 50L, name = "test", value = 100)
 
         val options = object : BaseNoOffsetNumberOptions<TestEntity, Long>(
@@ -108,18 +99,10 @@ class BaseNoOffsetNumberOptionsTest : FunSpec({
     }
 
     test("initFirstId should use min for ASC expression when not group by") {
-        val numberPath = mockk<NumberPath<Long>>()
+        val numberPath = mockHelper.createNumberPath<Long>()
         val query = mockk<JPAQuery<TestEntity>>()
-        val clonedQuery = mockk<JPAQuery<TestEntity>>(relaxed = true)
-        val selectMinQuery = mockk<JPAQuery<Long>>(relaxed = true)
-        val selectMaxQuery = mockk<JPAQuery<Long>>(relaxed = true)
-
-        every { query.clone() } returns clonedQuery
-        every { clonedQuery.select(numberPath.min()) } returns selectMinQuery
-        every { clonedQuery.select(numberPath.max()) } returns selectMaxQuery
-        every { selectMinQuery.fetchFirst() } returns 1L
-        every { selectMaxQuery.fetchFirst() } returns 100L
-        every { clonedQuery.toString() } returns "SELECT * FROM test"
+        val clonedQuery = mockHelper.setupQueryWithAggregates(query, 1L, 100L)
+        mockHelper.setupNumberAggregates(clonedQuery, numberPath, 1L, 100L)
 
         val options = object : BaseNoOffsetNumberOptions<TestEntity, Long>(
             numberPath, "id", Expression.ASC
