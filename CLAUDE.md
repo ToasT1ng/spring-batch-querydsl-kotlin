@@ -118,12 +118,15 @@ Example commit message format:
 ```
 YAML 문법 오류 수정
 
-워크플로우 파일의 JavaScript 템플릿 리터럴 이스케이프 처리 수정
+- 워크플로우 파일의 JavaScript 템플릿 리터럴 이스케이프 처리 수정
+- 백틱과 달러 기호 이스케이프 제거
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 
 Co-Authored-By: Claude <noreply@anthropic.com>
 ```
+
+Use bullet points (-) with line breaks for detailed descriptions, not comma-separated lists.
 
 ## Testing Strategy
 
