@@ -30,27 +30,22 @@ class SampleJobConfigTest(
 
     override fun extensions() = listOf(SpringExtension)
 
+    private lateinit var studentTestHelper: StudentTestHelper
+
     init {
         beforeEach {
-            studentJpaRepository.deleteAll()
+            studentTestHelper = StudentTestHelper(studentJpaRepository)
+            studentTestHelper.cleanUp()
             jobLauncherTestUtils.job = sampleJob
         }
 
         afterEach {
-            studentJpaRepository.deleteAll()
+            studentTestHelper.cleanUp()
         }
 
         test("sampleJob should process all students and update isProcessed flag") {
             // Given
-            val students = (1L..25L).map { id ->
-                StudentJpaEntity(
-                    seqNo = id,
-                    name = "Student$id",
-                    age = 20 + (id % 10).toInt(),
-                    isProcessed = false
-                )
-            }
-            studentJpaRepository.saveAll(students)
+            studentTestHelper.createStudents(count = 25)
 
             // When
             val jobParameters = JobParametersBuilder()
@@ -84,15 +79,7 @@ class SampleJobConfigTest(
 
         test("sampleJob should process students in chunks of 10") {
             // Given
-            val students = (1L..15L).map { id ->
-                StudentJpaEntity(
-                    seqNo = id,
-                    name = "Student$id",
-                    age = 20,
-                    isProcessed = false
-                )
-            }
-            studentJpaRepository.saveAll(students)
+            studentTestHelper.createStudents(count = 15)
 
             // When
             val jobParameters = JobParametersBuilder()
@@ -112,15 +99,7 @@ class SampleJobConfigTest(
 
         test("sampleJob should execute both steps in order") {
             // Given
-            val students = (1L..5L).map { id ->
-                StudentJpaEntity(
-                    seqNo = id,
-                    name = "Student$id",
-                    age = 20,
-                    isProcessed = false
-                )
-            }
-            studentJpaRepository.saveAll(students)
+            studentTestHelper.createStudents(count = 5)
 
             // When
             val jobParameters = JobParametersBuilder()

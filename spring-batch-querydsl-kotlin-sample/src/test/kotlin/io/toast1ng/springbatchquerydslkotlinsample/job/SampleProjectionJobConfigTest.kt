@@ -33,38 +33,27 @@ class SampleProjectionJobConfigTest(
 
     override fun extensions() = listOf(SpringExtension)
 
+    private lateinit var studentTestHelper: StudentTestHelper
+    private lateinit var studentAddressTestHelper: StudentAddressTestHelper
+
     init {
         beforeEach {
-            studentAddressJpaRepository.deleteAll()
-            studentJpaRepository.deleteAll()
+            studentTestHelper = StudentTestHelper(studentJpaRepository)
+            studentAddressTestHelper = StudentAddressTestHelper(studentAddressJpaRepository)
+            studentAddressTestHelper.cleanUp()
+            studentTestHelper.cleanUp()
             jobLauncherTestUtils.job = sampleProjectionJob
         }
 
         afterEach {
-            studentAddressJpaRepository.deleteAll()
-            studentJpaRepository.deleteAll()
+            studentAddressTestHelper.cleanUp()
+            studentTestHelper.cleanUp()
         }
 
         test("sampleProjectionJob should process students with addresses") {
             // Given
-            val students = (1L..15L).map { id ->
-                StudentJpaEntity(
-                    seqNo = id,
-                    name = "Student$id",
-                    age = 20 + (id % 10).toInt(),
-                    isProcessed = false
-                )
-            }
-            studentJpaRepository.saveAll(students)
-
-            val addresses = students.map { student ->
-                StudentAddressJpaEntity(
-                    seqNo = student.seqNo + 100L,
-                    student = student,
-                    address = "Address ${student.seqNo}"
-                )
-            }
-            studentAddressJpaRepository.saveAll(addresses)
+            val students = studentTestHelper.createStudents(count = 15)
+            studentAddressTestHelper.createAddresses(students)
 
             // When
             val jobParameters = JobParametersBuilder()
@@ -98,24 +87,8 @@ class SampleProjectionJobConfigTest(
 
         test("sampleProjectionJob should process in chunks of 10") {
             // Given
-            val students = (1L..25L).map { id ->
-                StudentJpaEntity(
-                    seqNo = id,
-                    name = "Student$id",
-                    age = 20,
-                    isProcessed = false
-                )
-            }
-            studentJpaRepository.saveAll(students)
-
-            val addresses = students.map { student ->
-                StudentAddressJpaEntity(
-                    seqNo = student.seqNo + 100L,
-                    student = student,
-                    address = "Address ${student.seqNo}"
-                )
-            }
-            studentAddressJpaRepository.saveAll(addresses)
+            val students = studentTestHelper.createStudents(count = 25)
+            studentAddressTestHelper.createAddresses(students)
 
             // When
             val jobParameters = JobParametersBuilder()
@@ -135,24 +108,8 @@ class SampleProjectionJobConfigTest(
 
         test("sampleProjectionJob should execute both steps in order") {
             // Given
-            val students = (1L..5L).map { id ->
-                StudentJpaEntity(
-                    seqNo = id,
-                    name = "Student$id",
-                    age = 20,
-                    isProcessed = false
-                )
-            }
-            studentJpaRepository.saveAll(students)
-
-            val addresses = students.map { student ->
-                StudentAddressJpaEntity(
-                    seqNo = student.seqNo + 100L,
-                    student = student,
-                    address = "Address ${student.seqNo}"
-                )
-            }
-            studentAddressJpaRepository.saveAll(addresses)
+            val students = studentTestHelper.createStudents(count = 5)
+            studentAddressTestHelper.createAddresses(students)
 
             // When
             val jobParameters = JobParametersBuilder()
