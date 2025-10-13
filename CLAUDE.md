@@ -116,6 +116,7 @@ When creating commits for this repository, follow these rules:
    - Avoid detailed implementation descriptions
    - List only key changes in bullet points
 3. **Make small, focused commits** - Each commit should represent a single logical change to make rollbacks easier
+4. **Limit commit size to 250 lines** - Keep changes under 250 lines per commit for easier review and rollback
 
 Example commit message format:
 ```
