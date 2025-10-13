@@ -3,27 +3,16 @@ package io.toast1ng.springbatchquerydslkotlinsample.job
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.extensions.spring.SpringExtension
 import io.kotest.matchers.shouldBe
-import io.toast1ng.springbatchquerydslkotlinsample.db.entity.StudentAddressJpaEntity
-import io.toast1ng.springbatchquerydslkotlinsample.db.entity.StudentJpaEntity
+import io.toast1ng.springbatchquerydslkotlinsample.config.BatchIntegrationTest
 import io.toast1ng.springbatchquerydslkotlinsample.db.repository.StudentAddressJpaRepository
 import io.toast1ng.springbatchquerydslkotlinsample.db.repository.StudentJpaRepository
 import org.springframework.batch.core.BatchStatus
 import org.springframework.batch.core.Job
 import org.springframework.batch.core.JobParametersBuilder
 import org.springframework.batch.test.JobLauncherTestUtils
-import org.springframework.batch.test.context.SpringBatchTest
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.context.TestPropertySource
 
-@SpringBootTest
-@SpringBatchTest
-@TestPropertySource(
-    properties = [
-        "spring.batch.job.enabled=false",
-        "spring.jpa.hibernate.ddl-auto=create-drop"
-    ]
-)
+@BatchIntegrationTest
 class SampleProjectionJobConfigTest(
     @Autowired private val jobLauncherTestUtils: JobLauncherTestUtils,
     @Autowired private val sampleProjectionJob: Job,
