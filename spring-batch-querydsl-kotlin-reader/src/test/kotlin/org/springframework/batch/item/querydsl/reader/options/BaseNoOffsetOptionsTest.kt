@@ -85,4 +85,36 @@ class BaseNoOffsetOptionsTest : FunSpec({
 
         options.isGroupByQuery(query) shouldBe true
     }
+
+    test("getFieldValue should extract id field value") {
+        val entity = TestEntity(id = 42L, name = "test", value = 100)
+
+        val options = object : BaseNoOffsetOptions<TestEntity>("id", Expression.ASC) {
+            override fun initKeys(query: JPAQuery<TestEntity>, page: Int) {}
+            override fun initFirstId(query: JPAQuery<TestEntity>) {}
+            override fun initLastId(query: JPAQuery<TestEntity>) {}
+            override fun createQuery(query: JPAQuery<TestEntity>, page: Int): JPAQuery<TestEntity> = query
+            override fun resetCurrentId(item: TestEntity) {}
+
+            fun testGetFieldValue(item: TestEntity) = getFieldValue(item)
+        }
+
+        options.testGetFieldValue(entity) shouldBe 42L
+    }
+
+    test("getFieldValue should extract value field") {
+        val entity = TestEntity(id = 1L, name = "test", value = 999)
+
+        val options = object : BaseNoOffsetOptions<TestEntity>("value", Expression.ASC) {
+            override fun initKeys(query: JPAQuery<TestEntity>, page: Int) {}
+            override fun initFirstId(query: JPAQuery<TestEntity>) {}
+            override fun initLastId(query: JPAQuery<TestEntity>) {}
+            override fun createQuery(query: JPAQuery<TestEntity>, page: Int): JPAQuery<TestEntity> = query
+            override fun resetCurrentId(item: TestEntity) {}
+
+            fun testGetFieldValue(item: TestEntity) = getFieldValue(item)
+        }
+
+        options.testGetFieldValue(entity) shouldBe 999
+    }
 })
