@@ -4,32 +4,18 @@ import com.querydsl.jpa.impl.JPAQuery
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.mockk.*
-import jakarta.persistence.EntityManager
-import jakarta.persistence.EntityManagerFactory
-import jakarta.persistence.EntityTransaction
 
 class QuerydslZeroPagingItemReaderTest : FunSpec({
 
-    lateinit var entityManagerFactory: EntityManagerFactory
-    lateinit var entityManager: EntityManager
-    lateinit var transaction: EntityTransaction
+    lateinit var mockHelper: QuerydslTestMockHelper
 
     beforeTest {
-        entityManagerFactory = mockk()
-        entityManager = mockk(relaxed = true)
-        transaction = mockk(relaxed = true)
-
-        every { entityManagerFactory.createEntityManager(any<Map<String, Any>>()) } returns entityManager
-        every { entityManager.transaction } returns transaction
-        every { entityManager.close() } just Runs
-        every { transaction.begin() } just Runs
-        every { transaction.commit() } just Runs
-        every { entityManager.flush() } just Runs
-        every { entityManager.clear() } just Runs
+        mockHelper = QuerydslTestMockHelper()
+        mockHelper.setupEntityManager()
     }
 
     afterTest {
-        clearAllMocks()
+        mockHelper.clearMocks()
     }
 
     test("QuerydslZeroPagingItemReader should always use offset 0") {
@@ -48,7 +34,7 @@ class QuerydslZeroPagingItemReaderTest : FunSpec({
         every { jpaQuery.fetch() } returnsMany listOf(firstPageData, secondPageData)
 
         val reader = QuerydslZeroPagingItemReader(
-            entityManagerFactory = entityManagerFactory,
+            entityManagerFactory = mockHelper.entityManagerFactory,
             pageSize = 2,
             queryFunction = { jpaQuery }
         )
@@ -70,7 +56,7 @@ class QuerydslZeroPagingItemReaderTest : FunSpec({
 
     test("QuerydslZeroPagingItemReader should initialize correctly") {
         val reader = QuerydslZeroPagingItemReader(
-            entityManagerFactory = entityManagerFactory,
+            entityManagerFactory = mockHelper.entityManagerFactory,
             pageSize = 10,
             queryFunction = { mockk<JPAQuery<TestEntity>>() }
         )
@@ -87,7 +73,7 @@ class QuerydslZeroPagingItemReaderTest : FunSpec({
         every { jpaQuery.fetch() } returns testData
 
         val reader = QuerydslZeroPagingItemReader(
-            entityManagerFactory = entityManagerFactory,
+            entityManagerFactory = mockHelper.entityManagerFactory,
             pageSize = 5,
             queryFunction = { jpaQuery }
         )
@@ -105,7 +91,7 @@ class QuerydslZeroPagingItemReaderTest : FunSpec({
         every { jpaQuery.fetch() } returns emptyList()
 
         val reader = QuerydslZeroPagingItemReader(
-            entityManagerFactory = entityManagerFactory,
+            entityManagerFactory = mockHelper.entityManagerFactory,
             pageSize = 10,
             queryFunction = { jpaQuery }
         )
@@ -125,7 +111,7 @@ class QuerydslZeroPagingItemReaderTest : FunSpec({
         every { jpaQuery.fetch() } returns testData
 
         val reader = QuerydslZeroPagingItemReader(
-            entityManagerFactory = entityManagerFactory,
+            entityManagerFactory = mockHelper.entityManagerFactory,
             pageSize = 10,
             queryFunction = { jpaQuery }
         )
@@ -133,7 +119,7 @@ class QuerydslZeroPagingItemReaderTest : FunSpec({
         reader.open(mockk(relaxed = true))
         reader.read()
 
-        verify { transaction.begin() }
-        verify { transaction.commit() }
+        verify { mockHelper.transaction.begin() }
+        verify { mockHelper.transaction.commit() }
     }
 })

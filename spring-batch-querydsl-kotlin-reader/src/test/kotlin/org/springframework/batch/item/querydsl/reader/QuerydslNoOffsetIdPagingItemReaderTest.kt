@@ -1,37 +1,20 @@
 package org.springframework.batch.item.querydsl.reader
 
-import com.querydsl.core.types.dsl.NumberPath
 import com.querydsl.jpa.impl.JPAQuery
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.mockk.*
-import jakarta.persistence.EntityManager
-import jakarta.persistence.EntityManagerFactory
-import jakarta.persistence.EntityTransaction
-import org.springframework.batch.item.querydsl.reader.expression.Expression
 import org.springframework.batch.item.querydsl.reader.options.BaseNoOffsetNumberOptions
 
 class QuerydslNoOffsetIdPagingItemReaderTest : FunSpec({
 
-    lateinit var entityManagerFactory: EntityManagerFactory
-    lateinit var entityManager: EntityManager
-    lateinit var transaction: EntityTransaction
+    lateinit var mockHelper: QuerydslTestMockHelper
     lateinit var options: BaseNoOffsetNumberOptions<TestEntity, Long>
 
     beforeTest {
-        entityManagerFactory = mockk()
-        entityManager = mockk(relaxed = true)
-        transaction = mockk(relaxed = true)
+        mockHelper = QuerydslTestMockHelper()
+        mockHelper.setupEntityManager()
 
-        every { entityManagerFactory.createEntityManager(any<Map<String, Any>>()) } returns entityManager
-        every { entityManager.transaction } returns transaction
-        every { entityManager.close() } just Runs
-        every { transaction.begin() } just Runs
-        every { transaction.commit() } just Runs
-        every { entityManager.flush() } just Runs
-        every { entityManager.clear() } just Runs
-
-        val numberPath = mockk<NumberPath<Long>>()
         options = mockk(relaxed = true)
         every { options.initKeys(any(), any()) } just Runs
         every { options.createQuery(any(), any()) } answers { firstArg() }
@@ -39,7 +22,7 @@ class QuerydslNoOffsetIdPagingItemReaderTest : FunSpec({
     }
 
     afterTest {
-        clearAllMocks()
+        mockHelper.clearMocks()
     }
 
     test("QuerydslNoOffsetIdPagingItemReader should initialize options on first page") {
@@ -50,7 +33,7 @@ class QuerydslNoOffsetIdPagingItemReaderTest : FunSpec({
         every { jpaQuery.fetch() } returns testData
 
         val reader = QuerydslNoOffsetIdPagingItemReader(
-            entityManagerFactory = entityManagerFactory,
+            entityManagerFactory = mockHelper.entityManagerFactory,
             pageSize = 10,
             queryFunction = { jpaQuery },
             transacted = true,
@@ -71,7 +54,7 @@ class QuerydslNoOffsetIdPagingItemReaderTest : FunSpec({
         every { jpaQuery.fetch() } returns testData
 
         val reader = QuerydslNoOffsetIdPagingItemReader(
-            entityManagerFactory = entityManagerFactory,
+            entityManagerFactory = mockHelper.entityManagerFactory,
             pageSize = 10,
             queryFunction = { jpaQuery },
             transacted = true,
@@ -95,7 +78,7 @@ class QuerydslNoOffsetIdPagingItemReaderTest : FunSpec({
         every { jpaQuery.fetch() } returns testData
 
         val reader = QuerydslNoOffsetIdPagingItemReader(
-            entityManagerFactory = entityManagerFactory,
+            entityManagerFactory = mockHelper.entityManagerFactory,
             pageSize = 10,
             queryFunction = { jpaQuery },
             transacted = true,
@@ -114,7 +97,7 @@ class QuerydslNoOffsetIdPagingItemReaderTest : FunSpec({
         every { jpaQuery.fetch() } returns emptyList()
 
         val reader = QuerydslNoOffsetIdPagingItemReader(
-            entityManagerFactory = entityManagerFactory,
+            entityManagerFactory = mockHelper.entityManagerFactory,
             pageSize = 10,
             queryFunction = { jpaQuery },
             transacted = true,
@@ -135,7 +118,7 @@ class QuerydslNoOffsetIdPagingItemReaderTest : FunSpec({
         every { jpaQuery.fetch() } returns testData
 
         val reader = QuerydslNoOffsetIdPagingItemReader(
-            entityManagerFactory = entityManagerFactory,
+            entityManagerFactory = mockHelper.entityManagerFactory,
             pageSize = 5,
             queryFunction = { jpaQuery },
             transacted = true,
@@ -156,7 +139,7 @@ class QuerydslNoOffsetIdPagingItemReaderTest : FunSpec({
         every { jpaQuery.fetch() } returns testData
 
         val reader = QuerydslNoOffsetIdPagingItemReader(
-            entityManagerFactory = entityManagerFactory,
+            entityManagerFactory = mockHelper.entityManagerFactory,
             pageSize = 10,
             queryFunction = { jpaQuery },
             transacted = true,
@@ -166,20 +149,21 @@ class QuerydslNoOffsetIdPagingItemReaderTest : FunSpec({
         reader.open(mockk(relaxed = true))
         reader.read()
 
-        verify { transaction.begin() }
-        verify { transaction.commit() }
+        verify { mockHelper.transaction.begin() }
+        verify { mockHelper.transaction.commit() }
     }
 
     test("QuerydslNoOffsetIdPagingItemReader should handle non-transacted mode") {
         val testData = listOf(TestEntity(id = 1L, name = "test1", value = 100))
 
+        mockHelper.setupDetach()
+
         val jpaQuery = mockk<JPAQuery<TestEntity>>(relaxed = true)
         every { jpaQuery.limit(any()) } returns jpaQuery
         every { jpaQuery.fetch() } returns testData
-        every { entityManager.detach(any()) } just Runs
 
         val reader = QuerydslNoOffsetIdPagingItemReader(
-            entityManagerFactory = entityManagerFactory,
+            entityManagerFactory = mockHelper.entityManagerFactory,
             pageSize = 10,
             queryFunction = { jpaQuery },
             transacted = false,
@@ -189,9 +173,9 @@ class QuerydslNoOffsetIdPagingItemReaderTest : FunSpec({
         reader.open(mockk(relaxed = true))
         reader.read()
 
-        verify(exactly = 0) { transaction.begin() }
-        verify(exactly = 0) { transaction.commit() }
-        verify { entityManager.detach(testData[0]) }
+        verify(exactly = 0) { mockHelper.transaction.begin() }
+        verify(exactly = 0) { mockHelper.transaction.commit() }
+        verify { mockHelper.entityManager.detach(testData[0]) }
     }
 
     test("QuerydslNoOffsetIdPagingItemReader should read multiple pages correctly") {
@@ -208,7 +192,7 @@ class QuerydslNoOffsetIdPagingItemReaderTest : FunSpec({
         every { jpaQuery.fetch() } returnsMany listOf(firstPageData, secondPageData)
 
         val reader = QuerydslNoOffsetIdPagingItemReader(
-            entityManagerFactory = entityManagerFactory,
+            entityManagerFactory = mockHelper.entityManagerFactory,
             pageSize = 2,
             queryFunction = { jpaQuery },
             transacted = true,
@@ -237,7 +221,7 @@ class QuerydslNoOffsetIdPagingItemReaderTest : FunSpec({
         every { jpaQuery.fetch() } returns emptyList()
 
         val reader = QuerydslNoOffsetIdPagingItemReader(
-            entityManagerFactory = entityManagerFactory,
+            entityManagerFactory = mockHelper.entityManagerFactory,
             pageSize = 10,
             queryFunction = { jpaQuery },
             transacted = true,
